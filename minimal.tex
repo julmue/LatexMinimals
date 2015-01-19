@@ -1,0 +1,35 @@
+%-------------------------------------------------------------------------------
+% preamble
+\RequirePackage{fixltx2e}
+\RequirePackage[l2tabu, orthodox]{nag}
+
+% KOMAScript-class
+\documentclass{scrartcl}
+\KOMAoption{DIV}{calc}
+\KOMAoption{fontsize}{11pt}
+\KOMAoption{paper}{a4,portrait}
+\KOMAoption{DIV}{last}
+
+% utf8-encoding
+\usepackage[log-declarations=false]{xparse}
+\usepackage[quiet]{fontspec}
+\usepackage{unicode-math}
+
+% german language support
+\usepackage{polyglossia}
+\setdefaultlanguage{german}
+
+% micro-typography support
+\usepackage{microtype}
+
+% dummy text 
+\usepackage{lipsum}
+
+%-------------------------------------------------------------------------------
+% document
+
+\begin{document}
+
+\lipsum[1]
+
+\end{document}
