@@ -1,0 +1,15 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{testpackage}
+
+\RequirePackage{etoolbox}
+\newbool{testbool}
+
+\RequirePackage{pgfkeys}
+\RequirePackage{pgfopts}
+
+\pgfkeys{testpackage/testkey/.is if=testbool}
+\pgfkeys{testpackage/.is family}
+
+\ProcessPgfOptions{testpackage}
+
+\newcommand{\test}{\ifbool{testbool}{testbool true}{testbool false}}

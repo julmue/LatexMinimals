@@ -1,0 +1,15 @@
+\documentclass{article}
+
+\usepackage{etoolbox}
+
+\newbool{bI} %initialises a new bool set to false
+
+\newcommand{\booltest}[1]{\ifbool{#1}{true}{false}}
+
+\newcommand{\booltoggle}[1]{\ifbool{#1}{\boolfalse{#1}}{\booltrue{#1}}}
+
+\begin{document}
+
+\booltest{bI} \booltoggle{bI} \booltest{bI}
+
+\end{document}
