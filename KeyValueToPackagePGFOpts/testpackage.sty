@@ -1,0 +1,12 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{testpackage}
+
+\RequirePackage{pgfkeys}
+\RequirePackage{pgfopts}
+
+\pgfkeys{testpackage/testkey/.initial=testkeyinitial}
+\pgfkeys{testpackage/.is family}
+
+\ProcessPgfOptions{/testpackage}
+
+\pgfkeys{testpackage, testkey/.get=\value}
