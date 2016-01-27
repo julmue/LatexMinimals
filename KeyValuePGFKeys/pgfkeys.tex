@@ -1,0 +1,19 @@
+\documentclass{article}
+\usepackage{pgfkeys}
+
+\pgfkeys{/width/.initial=one}
+\pgfkeys{/height/.initial=two}
+
+\newcommand\test[1][]{
+\pgfkeys{#1}
+\pgfkeys{/width/.get=\width}
+\pgfkeys{/height/.get=\height}
+
+\width \height
+}
+
+\begin{document}
+
+\test \test[width=custom]
+\end{document}
+
