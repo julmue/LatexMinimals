@@ -1,19 +1,315 @@
-\documentclass{article}
+\documentclass{scrartcl}
 \usepackage{pgfkeys}
+\usepackage{listings}
 
-\pgfkeys{/width/.initial=one}
-\pgfkeys{/height/.initial=two}
+%\newcommand{\inlatex}[1]{\lstinline[language=Tex]|#1|}
+\let\inlatex\lstinline
+\lstnewenvironment{latex}[1][]
+    {\lstset{language={Tex},#1}}
+    {}
+\newenvironment{result}
+    {\noindent\ignorespaces\textbf{Result:}\newline}
+    {\par\noindent\ignorespacesafterend}
+
+\usepackage{csquotes}
+\begin{document}
+
+% ------------------------------------------------------------------------------
+\section{Key-Value Übergabe mit \inlatex{pgfkeys}}
+
+\subsection{Simple usage of keys}
+
+In the following example a handler is assigned to the key
+\inlatex{testkey}. Handlers are indicated by names startging with a \enquote{.}. 
+This specific handler (\inlatex{.code}) assignes executable latex code to a key.
+The execuation of the code is triggered via the command \inlatex$pfgkeys{<key>=<value>}$ 
+the code is run with the parameter \inlatex{value}.
+
+\begin{latex}
+% set key
+\pgfkeys{/testkey/.code=Test1: value '#1'.}
+% lookup key 
+\pgfkeys{testkey=testvalue}
+\end{latex}
+
+\begin{result}
+\pgfkeys{/testkey/.code=Test1: value '#1'.}
+\pgfkeys{testkey=testvalue}
+\end{result}
+
+
+% ------------------------------------------------------------------------------
+\subsection{Define a key with a default value}
+
+Default values for code can be assigned to keys with the handler \inlatex{.default}.
+This is very different to \inlatex{.initial}!
+\inlatex{.default} assigns default arguments/values for the code assigned to a key, 
+whereas \inlatex{.initial} initializes the data values assigned to a key. 
+
+\begin{latex}
+% set key
+\pgfkeys{/testkey/.code=Test2: value '#1'.}
+\pgfkeys{/testkey/.default=defaultvalue}
+
+% lookup
+\pgfkeys{/testkey}
+\pgfkeys{/testkey=testvalue}
+\end{latex}
+
+\begin{result}
+% set key
+\pgfkeys{/testkey/.code=Test2: value '#1'.}
+\pgfkeys{/testkey/.default=defaultvalue}
+
+% lookup
+\pgfkeys{/testkey}
+\pgfkeys{/testkey=testvalue}
+\end{result}
+
+Of course this mechanism can be embedded inside a command:
+% # inside newcommand
+\begin{latex}
+\pgfkeys{/testkey/.code=Test2: value '#1'.}
+\pgfkeys{/testkey/.default=defaultvalue}
+
+\newcommand{\testcommand}[1][]{\pgfkeys{#1}}
+
+\testcommand 
+\testcommand[testkey=ho]
+\end{latex}
+
+\begin{result}
+\pgfkeys{/testkey/.code=Test2: value '#1'.}
+\pgfkeys{/testkey/.default=defaultvalue}
+
+\newcommand{\testcommand}[1][]{\pgfkeys{#1}}
+\testcommand 
+\testcommand[testkey=ho]
+\end{result}
+
+Also , as the source code of the above examples indicate,
+key value assignments can be made local to an environment
+they come out of scope after the environment is left.
+Either to all instances when specified in the definition of the environment,
+or local to a single instance of the environment when specified inside the instance;
+
+% ------------------------------------------------------------------------------
+\subsection{Styles: key that are assigned key lists}
+
+Styles are lists of keys. If a style is assigned to a key, the invocation
+of the key triggers the invocation of the keys in the list.
+
+\begin{latex}
+\pgfkeys{/a/.code=(a:#1)}
+\pgfkeys{/b/.code=(b:#1)}
+\pgfkeys{/my style/.style={/a=foo,/b=bar,/a=#1}}
+
+\pgfkeys{/my style=wow}
+\end{latex}
+
+\begin{result}
+\pgfkeys{/a/.code=(a:#1)}
+\pgfkeys{/b/.code=(b:#1)}
+\pgfkeys{/my style/.style={/a=foo,/b=bar,/a=#1}}
+
+\pgfkeys{/my style=wow}
+\end{result}
+
+
+% ------------------------------------------------------------------------------
+\subsection{Styles: Style and code are mutually exclusive}
+
+By default, style and code handlers for a key are mutually exclusive --
+a key is assigned to code or to a style.
+
+\begin{latex}
+\pgfkeys{/c/.code=c is executed}
+\pgfkeys{/c/a/.code=a is executed}
+\pgfkeys{/c/b/.code=b is executed}
+\pgfkeys{/c/.style={c/.cd,a,b}}
+
+\pgfkeys{c}
+\end{latex}
+
+\begin{result}
+\pgfkeys{/c/.code=c is executed}
+\pgfkeys{/c/a/.code=a is executed}
+\pgfkeys{/c/b/.code=b is executed}
+\pgfkeys{/c/.style={c/.cd,a,b}}
+
+\pgfkeys{c}
+\end{result}
+
+
+% ------------------------------------------------------------------------------
+\subsection{Family: Shortcut to setting a folder}
+
+The handler \inlatex{.is family} defines a key as a shortcut to send the current
+folder (style comes from tikz... folders in tikz define different syling for 
+elements).
+
+\begin{latex}
+\pgfkeys{/c/a/.code=a}
+\pgfkeys{/c/b/.code=b}
+\pgfkeys{/c/.is family}
+
+% set current path to /c/, then access a and b by name
+\pgfkeys{c, a, b}
+\end{latex}
+
+\begin{result}
+\pgfkeys{/c/a/.code=a}
+\pgfkeys{/c/b/.code=b}
+%\pgfkeys{/c/.style={/c/a,/c/b}}
+\pgfkeys{/c/.is family}
+
+\pgfkeys{c, a, b}
+\end{result}
+
+The handler \inlatex{is family} is just a synonym:
+\inlatex{<key>/.is family} is the same as \inlatex{<key>/.style=<key>/.cd}.
+
+Because styles and commands are mutually exclusive by default,
+a key can either act as a directory shortcut via \inlatex{is family} or 
+execude code via \inlatex{.code}.
+(Thus it seems there are ways around this).
+
+% ------------------------------------------------------------------------------
+\subsection{Every folder can have associated code and handlers}
+
+With modeling keys like folders, every folder can have associated code,
+and still have subkeys:
+
+\begin{latex}
+\pgfkeys{/c/.code=(/c:#1)}
+\pgfkeys{/c/a/.code=(/c/a:#1)}
+\pgfkeys{/c/b/.code=(/c/b:#1)}
+
+\pgfkeys{/c=that}
+\pgfkeys{/c/.cd, a=this}
+\end{latex}
+
+\begin{result}
+\pgfkeys{/c/.code=(/c:#1)}
+\pgfkeys{/c/a/.code=(/c/a:#1)}
+\pgfkeys{/c/b/.code=(/c/b:#1)}
+
+\pgfkeys{/c=that}
+\pgfkeys{/c/.cd, a=this}
+\end{result}
+
+
+% ------------------------------------------------------------------------------
+\subsection{Defining Value-, Macro-, If- and Choice Keys}
+
+\subsubsection{Keyhandler `.initial'}
+
+The handler \inlatex{.initial} is used to assign an initial value to a key.
+It should not be confused with the handler \inlatex{.default}.
+\inlatex{.default} specifies an default argument for code that it assigned 
+to a key with \inlatex{.code}. 
+
+The following example shows \inlatex{.initial} together with \inlatex{.get}.
+
+\begin{latex}
+\pgfkeys{/a/.initial=one}
+\pgfkeys{/b/.initial=two}
 
 \newcommand\test[1][]{
 \pgfkeys{#1}
-\pgfkeys{/width/.get=\width}
-\pgfkeys{/height/.get=\height}
+\pgfkeys{/a/.get=\width}
+\pgfkeys{/b/.get=\height}
+
+\width \height
+
+\test \test[a=testa] \test[a=testa, b=testb]
+}
+\end{latex}
+
+\begin{result}
+\pgfkeys{/a/.initial=inita}
+\pgfkeys{/b/.initial=initb}
+
+\newcommand\test[1][]{
+\pgfkeys{#1}
+\pgfkeys{/a/.get=\width}
+\pgfkeys{/b/.get=\height}
 
 \width \height
 }
+\test \test[a=testa] \test[a=testa, b=testb]
+\end{result}
 
-\begin{document}
 
-\test \test[width=custom]
+\subsubsection{keyhandler `.get'}
+
+The handler \inlatex{.get} executes a \inlatex{let} command so that the contents 
+of a key are stored in a macro. 
+
+\begin{latex}
+\pgfkeys{/my key/.initial=red}
+\pgfkeys{/my key=blue}
+\pgfkeys{/my key/.get=\mymacro}
+\mymacro
+\end{latex}
+
+\begin{result}
+\pgfkeys{/my key/.initial=red}
+\pgfkeys{/my key=blue}
+\pgfkeys{/my key/.get=\mymacro}
+\mymacro
+\end{result}
+
+\subsubsection{keyhandler `.add'}
+
+Adds the \inlatex{<prefix value>} to the beginning and the 
+\inlatex{<append value>} at the end of the value stored in key.
+
+\begin{latex}
+\pgfkeys{/my key/.initial=red}
+\pgfkeys{/my key/.add={a }{ flower}}
+\pgfkeys{my key}
+\end{latex}
+
+\begin{result}
+\pgfkeys{/my key/.initial=red}
+\pgfkeys{/my key/.add={a }{ flower}}
+\pgfkeys{my key}
+\end{result}
+
+% same stuff
+% .prefix
+% .append
+
+\subsubsection{keyhandler `.link'}
+
+Somewhat like soft links in unix
+
+
+\subsubsection{keyhandler `.store in'}
+
+key=value should cause value to be stored in some macro
+typically you could just as well store the value in the key itself.
+
+The difference to \inlatex{.get} is, that will get saves the value of a key
+in a macro, \inlatex{.store in} stores the result of the computation associated 
+with the code in a macro... (is that correct?)
+
+\begin{latex}
+\pgfkeys{/text/.store in=\mytext} % declare safe macro
+\pgfkeys{/text=Hello world!} % saves stuff in macro
+\mytext
+\end{latex}
+
+\begin{result}
+\pgfkeys{/text/.store in=\mytext} % declare safe macro
+\pgfkeys{/text=Hello world!} % saves stuff in macro
+\mytext
+\end{result}
+
+\subsubsection{keyhandler `.is if'}
+
+\subsubsection{keyhandler `.is choice'}
+
 \end{document}
 
